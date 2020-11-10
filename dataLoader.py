@@ -7,7 +7,7 @@ def loadData():
     pixels = []
     pixelData = []
     ethnicity = []
-    with open('../age_gender.csv', 'r') as csvfile:
+    with open('dataset/age_gender.csv', 'r') as csvfile:
         data = csv.reader(csvfile, delimiter=',', quotechar='|')
         
         fields = next(data)
@@ -15,9 +15,14 @@ def loadData():
 
         for row in data:
             rows.append(row) 
-            pixels.append(row[4])
+            pixelData.append(row[4])
             ethnicity.append(row[1])
+        #this will make pixels a list of lists of ints
         
+        for image in pixelData:
+            pixels.append(image.split())
+            for i in range(len(pixels[len(pixels)-1])):
+                pixels[len(pixels)-1][i] = (int(pixels[len(pixels)-1][i]))
         
         return rows, pixels, fields, ethnicity
         #48*48 images

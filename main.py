@@ -5,6 +5,7 @@ import random
 from PIL import Image
 from dataLoader import loadData
 from sklearn import metrics
+from sklearn import preprocessing
 # from mnist import MNIST
 #
 # mndata = MNIST('samples')
@@ -104,14 +105,48 @@ def kmeans(images):
 
     return reps
 
+def dataSetup():
+    rows = []
+    pixels = []
+    labels = []
+    ethnicity = []
+    rows, pixels, labels, ethnicity = loadData()
 
-rows = []
-pixels = []
-labels = []
-ethnicity = []
-rows, pixels, labels, ethnicity = loadData()
+    dataSize = (len(rows))
+    trainingSetSize = 19754
+    testDataSize = dataSize - 19754
+    x_train = []
+    x_test = []
+    y_train = []
+    y_test = []
 
-findAvgFace(pixels, ethnicity, 0)
+    luckyHat = random.sample(range(23705), 19754)
+    luckyHat.sort(reverse=True)
+    for i in range(0, 19754):
+        x_train.append(pixels[luckyHat[i]])
+        y_train.append(ethnicity[luckyHat[i]])
+        del pixels[luckyHat[i]]
+        del ethnicity[luckyHat[i]]
+
+    for i in range(0, testDataSize):
+        x_test.append(pixels[i])
+        y_test.append(ethnicity[i])
+    x_train = np.array(x_train, dtype=np.uint8)
+    x_train = x_train / 255.0
+    x_test = np.array(x_test, dtype=np.uint8)
+    x_test = x_test / 255.0
+    y_train = np.array(y_train)
+    y_test = np.array(y_test)
+    y_train = np.reshape(y_train, (19754,1))
+    y_test = np.reshape(y_test, (testDataSize,1))
+    return x_train, x_test, y_train, y_test
+
+
+
+x_train, x_test, y_train, y_test = dataSetup()
+
+
+#findAvgFace(pixels, ethnicity, 0)
 # reps = kmeans(pixels)
 # for rep in reps:
 #     pixArray = np.array(rep['pix'])
@@ -121,31 +156,9 @@ findAvgFace(pixels, ethnicity, 0)
 #     img.show()
 #rows = np.array(rows, dtype=object)
 #pixels = np.array(pixels, dtype=object)
-dataSize = (len(rows))
-trainingSetSize = 19754
-testDataSize = dataSize - 19754
-x_train = []
-x_test = []
-y_train = []
-y_test = []
-print(len(pixels))
 
-luckyHat = random.sample(range(23705), 19754)
-luckyHat.sort(reverse=True)
-for i in range(0, 19754):
-    x_train.append(pixels[luckyHat[i]])
-    y_train.append(ethnicity[luckyHat[i]])
-    del pixels[luckyHat[i]]
-    del ethnicity[luckyHat[i]]
 
-for i in range(0, testDataSize):
-    x_test.append(pixels[i])
-    y_test.append(ethnicity[i])
-x_train = np.array(x_train, dtype=object)
-x_test = np.array(x_test, dtype=object)
-y_train = np.array(y_train, dtype=object)
-y_test = np.array(y_test, dtype=object)
-print(x_train.shape)
+
 
 ##so x train is 19754 ID array but in medium tutorial it is (19754, 2304)
 #2304 cuz we got 48x48 images...will fix later
