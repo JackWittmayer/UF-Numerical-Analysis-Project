@@ -5,52 +5,63 @@ import random
 from PIL import Image
 from dataLoader import loadData
 from sklearn import metrics
-# from mnist import MNIST
-#
-# mndata = MNIST('samples')
-#
-# images, labels = mndata.load_training()
-# # or
-# images, labels = mndata.load_testing()
 
 ''' k means algorithm steps:
 1. pick random representatives
-2. find closest representative for each data point, give it a color
+2. find closest representative for each data point, give it a class
 3. find average position of each data point in each class, make that the new representative
 '''
+
+# Helper function that displays an image to the screen given a 1d list of pixels:
+def displayImage(pixels):
+    pixArray = np.array(pixels)
+    pixArray2D = np.reshape(pixArray, (-1, 48))
+    img = Image.fromarray(pixArray2D)
+    img.show()
+
+# Helper function that computes the mean square distance of an image and a representative:
 def meanSquareDistance(rep, dataPoint):
     sum = 0
+    # Standard deviation formula:
     for i in range(len(rep)):
         squareDistance = (rep[i] - dataPoint[i])**2
         sum += squareDistance
-    sum /= len(rep)
-    return sum
+    MSD = sum/ len(rep)
+    return MSD
 
+
+# Helper function that averages all the pixels in all the images of a given class
+# and then returns that average image:
 def findClassAvg(rep, images):
-    # pixArray = np.array(rep['pix'])
-    #
-    # pixArray2D = np.reshape(pixArray, (-1, 48))
-    # img = Image.fromarray(pixArray2D)
-    # img.show()
+    # displayImage(rep['pix'])
+
+    # Create empty list of pixels:
     avgPix = [0] * len(images[0]['pix'])
-    j = 0
+    classImageCount = 0
     for image in images:
+
+        # if the image belongs to the class we are looking for:
         if image['class'] == rep['class']:
+
+            # Skip images that are missing pixels:
             if image['pix'] == None:
                 continue
-            j += 1
+
+            # tally up the number of images that we are averaging:
+            classImageCount += 1
+
+            # iterate over all pixels in the image and add it to the respective pixel of avgPix:
             for i in range(len(image['pix'])):
                 avgPix[i] += image['pix'][i]
+
+    # Divide each sum of pixels by the number of images to create an average:
     for i in range(len(avgPix)):
-        avgPix[i] //= j
-    # pixArray = np.array(avgPix)
-    #
-    # pixArray2D = np.reshape(pixArray, (-1, 48))
-    # img = Image.fromarray(pixArray2D)
-    # img.show()
+        avgPix[i] //= classImageCount
     return avgPix
 
+# Experimental function to average all the faces for a given ethnicity (takes forever probably doesn't work)
 def findAvgFace(images, ethnicities, selection):
+    # Filter all images that have the selected ethnicity:
     filteredImages = []
     for j in range(len(images)):
         if int(ethnicities[j]) != selection:
@@ -59,49 +70,70 @@ def findAvgFace(images, ethnicities, selection):
         for i in range(len(images[j])):
             images[j][i] = int(images[j][i])
             filteredImages.append(images[j])
+
+    # Average the images:
     avgPix = [0] * len(filteredImages[0])
     for image in filteredImages:
         for i in range(len(image)):
             avgPix[i] += image[i]
     for i in range(len(avgPix)):
         avgPix[i] //= len(filteredImages)
-    pixArray = np.array(avgPix)
-    pixArray2D = np.reshape(pixArray, (-1, 48))
-    img = Image.fromarray(pixArray2D)
-    img.show()
+
+    displayImage(avgPix)
 
 
+# Attempted implementation of the kmeans algorithm the professor showed in class:
 def kmeans(images):
-    clusterNumber = 4
+    clusterNumber = 4 # number of expected clusters, will probably be in the order of hundreds
+    iterationCount = 15 # number of times to create representatives, find distance to reps, etc.
+
+    # pick k random images from images, using all of them takes forever:
     images = random.choices(images, k = 100)
+
     # turn list of space separated pixel values into list of lists of pixel ints with class label:
+    # TODO: Move this code into dataLoader so we can start off with the proper format
     for j in range(len(images)):
-        images[j] = images[j].split()
+        # Turn space separated string of numbers into list of number strings:
+        images[j] = images[j].split() # "123 234 212" -> ['123, '234', '212']
+
+        # Turn every string number into an integer:
         for i in range(len(images[j])):
             images[j][i] = int(images[j][i])
+
+        # Turn list of lists of pixels into a list of dictionaries containing entries for
+        # a list of pixels ('pix) and a class value ('class'):
         images[j] = {'pix': images[j], 'class': 0}
-        # 1. Create two random representatives:
+
+    # PART 1: CREATE [clusterNumber] RANDOM REPRESENTATIVES:
     reps = []
     for i in range(clusterNumber):
+        # Grab a random image from images, copy its pixels, and create a new dictionary from it:
         rep = {'pix': images[random.randint(0, len(images)-1)]['pix'].copy(), 'class': i}
         reps.append(rep)
 
-    for i in range(15):
-        # 2. Assign class to each data point based on closest representative:
+    # Do the next two parts [iterationCount] times:
+    for i in range(iterationCount):
+        # PART 2: ASSIGN CLASS TO EACH DATA POINT (IMAGE) BASED ON CLOSEST REPRESENTATIVE:
+        # Find minimum distance from an image to a representative:
         for i in range(len(images)):
+            # Initialize minimum distance to the distance to the first representative:
             minDist = meanSquareDistance(reps[0]['pix'], images[i]['pix'])
             images[i]['class'] = reps[0]['class']
+
+            # Loop over every representative but the first one (already checked it):
             for rep in reps[1:]:
                 dist = meanSquareDistance(rep['pix'], images[i]['pix'])
+                # if we found a closer representative: update the image to belong to its class:
                 if dist < minDist:
                     minDist = dist
                     images[i]['class'] = rep['class']
 
-        # 3. find average position of each data point in each class, make that the new representative:
+        # PART 3: FIND AVERAGE POSITION OF EACH IMAGE IN EACH CLASS, MAKE THAT THE NEW REPRESENTATIVE:
         for i in range(len(reps)):
             # calculate average:
             reps[i]['pix'] = findClassAvg(reps[i], images)
 
+    # Return the reps so we can see how they were changed:
     return reps
 
 
@@ -111,14 +143,9 @@ labels = []
 ethnicity = []
 rows, pixels, labels, ethnicity = loadData()
 
-findAvgFace(pixels, ethnicity, 0)
-# reps = kmeans(pixels)
-# for rep in reps:
-#     pixArray = np.array(rep['pix'])
-#
-#     pixArray2D = np.reshape(pixArray, (-1, 48))
-#     img = Image.fromarray(pixArray2D)
-#     img.show()
+reps = kmeans(pixels)
+for rep in reps:
+    displayImage(rep['pix'])
 #rows = np.array(rows, dtype=object)
 #pixels = np.array(pixels, dtype=object)
 dataSize = (len(rows))
