@@ -4,8 +4,9 @@ import random
 import random
 from PIL import Image
 from dataLoader import loadData
-from sklearn import metrics
+from sklearn.metrics import accuracy_score
 from sklearn import preprocessing
+from sklearn.cluster import MiniBatchKMeans
 # from mnist import MNIST
 #
 # mndata = MNIST('samples')
@@ -72,7 +73,7 @@ def findAvgFace(images, ethnicities, selection):
     img.show()
 
 
-def kmeans(images):
+""" def kmeans(images):
     clusterNumber = 4
     images = random.choices(images, k = 100)
     # turn list of space separated pixel values into list of lists of pixel ints with class label:
@@ -104,7 +105,7 @@ def kmeans(images):
             reps[i]['pix'] = findClassAvg(reps[i], images)
 
     return reps
-
+ """
 def dataSetup():
     rows = []
     pixels = []
@@ -141,10 +142,43 @@ def dataSetup():
     y_test = np.reshape(y_test, (testDataSize,1))
     return x_train, x_test, y_train, y_test
 
+def retrieve_info(cluster_labels, y_train):
+    ref_labels = {}
+    y_train1D = y_train[:,0]
+    y_train1D = [int(j) for j in y_train1D]
+    for i in range(len(np.unique(kMeansAlg.labels_))):
+        index = np.where(cluster_labels == i,1,0) #this line means if label = i then put a 1, else put a 0
 
+        print('index is ' + str(index))
+        num = np.bincount(y_train1D[index==1]).argmax() #trying to make this line of code work
+        ref_labels[i] = num
+    return ref_labels
 
 x_train, x_test, y_train, y_test = dataSetup()
 
+print('done with data setup')
+total_clusters = len(np.unique(y_test))
+
+kMeansAlg = MiniBatchKMeans(n_clusters=total_clusters)
+print('initialized minibatch')
+kMeansAlg.fit(x_train)
+print('k means model trained')
+print(type(kMeansAlg.labels_))
+print(type(kMeansAlg.labels_[0]))
+print(type(y_train[:,0]))
+
+count = 0
+print(kMeansAlg.labels_[:20]) 
+y_train1d = y_train[:,0]
+print(y_train[:20])
+for i in range(len(kMeansAlg.labels_)):
+    if kMeansAlg.labels_[i] == y_train1d[i]:
+        count += 1
+accuracy = count/len(kMeansAlg.labels_)
+print(accuracy)
+#reference_labels = retrieve_info(kMeansAlg.labels_, y_train)
+#print('done with retrieve_info')
+#print(reference_labels)
 
 #findAvgFace(pixels, ethnicity, 0)
 # reps = kmeans(pixels)
