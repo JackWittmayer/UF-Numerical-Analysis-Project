@@ -15,14 +15,31 @@ def createImageDictionaries():
             imgname = row[3]
             pixels = row[4].split()
 
+
+# Turn csv file into list of dictionaries containing values for pixels, ethnicity, age, etc:
+def createImageDictionaries():
+    images = []
+    with open('../age_gender.csv', 'r') as csvfile:
+        data = csv.reader(csvfile, delimiter=',', quotechar='|')
+        fields = next(data)
+        for row in data:
+            age = row[0]
+            ethnicity = row[1]
+            gender = row[2]
+            imgname = row[3]
+            pixels = row[4].split()
+
             # Turn list of strings into list of ints:
             for i in range(len(pixels)):
                 pixels[i] = int(pixels[i])
 
             imageDict = {'age': int(age), 'ethnicity': int(ethnicity), 'gender': int(gender), 'imgname': imgname, 'pix': pixels,
+
+     
                          'class': 0}
             images.append(imageDict)
         return images
+
 
 
 def getBabiesOldies():
@@ -36,6 +53,7 @@ def getBabiesOldies():
                 image['age'] = 1
             output.append(image) 
     return output 
+
 def loadData():
     rows = []
     images = []
