@@ -3,7 +3,7 @@ import numpy as np
 import random
 import random
 from PIL import Image
-from dataLoader import loadData
+from dataLoader import loadData, createImageDictionaries
 from sklearn import metrics
 
 ''' k means algorithm steps:
@@ -84,25 +84,11 @@ def findAvgFace(images, ethnicities, selection):
 
 # Attempted implementation of the kmeans algorithm the professor showed in class:
 def kmeans(images):
-    clusterNumber = 4 # number of expected clusters, will probably be in the order of hundreds
+    clusterNumber = 20 # number of expected clusters, will probably be in the order of hundreds
     iterationCount = 15 # number of times to create representatives, find distance to reps, etc.
 
     # pick k random images from images, using all of them takes forever:
     images = random.choices(images, k = 100)
-
-    # turn list of space separated pixel values into list of lists of pixel ints with class label:
-    # TODO: Move this code into dataLoader so we can start off with the proper format
-    for j in range(len(images)):
-        # Turn space separated string of numbers into list of number strings:
-        images[j] = images[j].split() # "123 234 212" -> ['123, '234', '212']
-
-        # Turn every string number into an integer:
-        for i in range(len(images[j])):
-            images[j][i] = int(images[j][i])
-
-        # Turn list of lists of pixels into a list of dictionaries containing entries for
-        # a list of pixels ('pix) and a class value ('class'):
-        images[j] = {'pix': images[j], 'class': 0}
 
     # PART 1: CREATE [clusterNumber] RANDOM REPRESENTATIVES:
     reps = []
@@ -143,7 +129,8 @@ labels = []
 ethnicity = []
 rows, pixels, labels, ethnicity = loadData()
 
-reps = kmeans(pixels)
+images = createImageDictionaries()
+reps = kmeans(images)
 for rep in reps:
     displayImage(rep['pix'])
 #rows = np.array(rows, dtype=object)
