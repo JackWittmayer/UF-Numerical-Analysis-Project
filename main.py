@@ -3,7 +3,7 @@ import numpy as np
 import random
 import random
 from PIL import Image
-from dataLoader import loadData
+from dataLoader import loadData, createImageDictionaries, getBabiesOldies
 from sklearn.cluster import MiniBatchKMeans
 
 ''' k means algorithm steps:
@@ -97,7 +97,8 @@ def findAvgFace(images, ethnicities, selection):
 
 # Attempted implementation of the kmeans algorithm the professor showed in class:
 def kmeans(imageInput, trainingSetSize, inputReps):
-    clusterNumber = 4 # number of expected clusters, will probably be in the order of hundreds
+    print('running k means!')
+    clusterNumber = 2 # number of expected clusters, will probably be in the order of hundreds
     #iterations count should be dependent on convergence of Jclust function
     images = []
     trainingSetIndicies = []
@@ -106,7 +107,7 @@ def kmeans(imageInput, trainingSetSize, inputReps):
 
     ##Data selection, tracking, then normalization
     
-    set = list(range(0, 100))
+    set = list(range(0, len(imageInput)))
     #set = list(range(0, len(imageInput)-1))
     random.shuffle(set)
     for i in range(trainingSetSize):
@@ -174,17 +175,14 @@ def accuracy_test(images, ethnicity, trainingSet):
             image['pix'][j] = image['pix'][j] * 255.0
 
     for i in range(len(trainingSet)):
-        if i < 5: 
-            displayImage(images[i]['pix'])
-            displayImage(imageData[trainingSet[i]]['pix'])
-        if int(images[i]['class']) == int(ethnicity[trainingSet[i]]):
+        if int(images[i]['class']) == int(images[i]['age']):
             count += 1
             
     return count/len(trainingSet)
 
 def predetermineReps(imageData, inputReps):
-    for i in range(5):
-        set_ = [356, 367 ,91 , 258, 197]
+    for i in range(2):
+        set_ = [0, len(imageData)-1]
         rep = {'pix': imageData[set_[i]]['pix'].copy(), 'class': i}
         inputReps.append(rep)
     for rep in inputReps:
@@ -192,20 +190,24 @@ def predetermineReps(imageData, inputReps):
             rep['pix'][j] = rep['pix'][j] / 255.0 
     return inputReps
 
+
+
 rows = []
 pixels = []
 imageData = []
 labels = []
 ethnicity = []
-rows, imageData, labels, ethnicity, pixels = loadData()
+#rows, imageData, ethnicity, pixels = loadData()
+babiesOldiesData = getBabiesOldies()
+
 inputReps = []
 inputRepClasses = []
 
-inputReps = predetermineReps(imageData, inputReps)
+inputReps = predetermineReps(babiesOldiesData, inputReps)
 
 
 
-reps, JClustResults, imageResults, trainingIndices  = kmeans(imageData, 100, inputReps)
+reps, JClustResults, imageResults, trainingIndices  = kmeans(babiesOldiesData, 100, inputReps)
 print(accuracy_test(imageResults, ethnicity, trainingIndices))
 
 print(JClustResults)
