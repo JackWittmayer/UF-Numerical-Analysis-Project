@@ -4,6 +4,7 @@ import random
 import random
 from PIL import Image
 from dataLoader import loadData, createImageDictionaries, getBabiesOldies
+from helper import *
 from sklearn.cluster import MiniBatchKMeans
 
 ''' k means algorithm steps:
@@ -11,56 +12,6 @@ from sklearn.cluster import MiniBatchKMeans
 2. find closest representative for each data point, give it a class
 3. find average position of each data point in each class, make that the new representative
 '''
-
-# Helper function that displays an image to the screen given a 1d list of pixels:
-def displayImage(pixels):
-    pixArray = np.array(pixels)
-    pixArray2D = np.reshape(pixArray, (-1, 48))
-    img = Image.fromarray(pixArray2D)
-    img.show()
-
-# Helper function that computes the mean square distance of an image and a representative:
-def meanSquareDistance(rep, dataPoint):
-    sum = 0
-    # Standard deviation formula:
-    for i in range(len(rep)):
-        squareDistance = (rep[i] - dataPoint[i])**2
-        sum += squareDistance
-    MSD = sum/ len(rep)
-    return MSD
-
-
-# Helper function that averages all the pixels in all the images of a given class
-# and then returns that average image:
-def findClassAvg(rep, images):
-    # displayImage(rep['pix'])
-
-    # Create empty list of pixels:
-    avgPix = [0] * len(images[0]['pix'])
-    classImageCount = 0
-    count = 0
-    for image in images:
-
-        # if the image belongs to the class we are looking for:
-        if image['class'] == rep['class']:
-            # Skip images that are missing pixels:
-            if image['pix'] == None:
-                count += 1
-                continue
-
-            # tally up the number of images that we are averaging:
-            classImageCount += 1
-
-            # iterate over all pixels in the image and add it to the respective pixel of avgPix:
-            for i in range(len(image['pix'])):
-                avgPix[i] += float(image['pix'][i])
-    
-    # Divide each sum of pixels by the number of images to create an average:
-    for i in range(len(avgPix)):
-        if classImageCount == 0:
-            print('something is fucked!')
-        avgPix[i] /= classImageCount
-    return avgPix
 
 #function to track convergence of algorithm
 def Jclust(reps, images):
@@ -71,28 +22,6 @@ def Jclust(reps, images):
                 for j in range(len(image['pix'])):
                     sum = sum + abs(image['pix'][j] - rep['pix'][j])**2
     return (sum/len(images))
-
-# Experimental function to average all the faces for a given ethnicity (takes forever probably doesn't work)
-def findAvgFace(images, ethnicities, selection):
-    # Filter all images that have the selected ethnicity:
-    filteredImages = []
-    for j in range(len(images)):
-        if int(ethnicities[j]) != selection:
-            continue
-        images[j] = images[j].split()
-        for i in range(len(images[j])):
-            images[j][i] = int(images[j][i])
-            filteredImages.append(images[j])
-
-    # Average the images:
-    avgPix = [0] * len(filteredImages[0])
-    for image in filteredImages:
-        for i in range(len(image)):
-            avgPix[i] += image[i]
-    for i in range(len(avgPix)):
-        avgPix[i] //= len(filteredImages)
-
-    displayImage(avgPix)
 
 
 # Attempted implementation of the kmeans algorithm the professor showed in class:
@@ -115,11 +44,7 @@ def kmeans(imageInput, trainingSetSize, inputReps):
         trainingSetIndicies.append(set[i])
     
     for image in images:
-        for j in range(len(image['pix'])):
-            image['pix'][j] = image['pix'][j] / 255.0
-        
-   
-    
+        image['pix'] = normalizeImage(image['pix'])
 
     # PART 1: CREATE [clusterNumber] RANDOM REPRESENTATIVES:
     reps = []
@@ -129,6 +54,7 @@ def kmeans(imageInput, trainingSetSize, inputReps):
             # Grab a random image from images, copy its pixels, and create a new dictionary from it:
             rep = {'pix': images[random.randint(0, len(images)-1)]['pix'].copy(), 'class': i}
             reps.append(rep)
+            displayImage(rep['pix'], True)
     else:
         reps = inputReps
 
@@ -159,7 +85,7 @@ def kmeans(imageInput, trainingSetSize, inputReps):
             reps[i]['pix'] = findClassAvg(reps[i], images)
         JClusterResults.append(Jclust(reps, images))
         #if a couple of iterations have gone by and the Jclust function isn't decreasing by more than .5% we have converged
-        if (len(JClusterResults) > 4):
+        if len(JClusterResults) > 4:
             if (JClusterResults[len(JClusterResults)-2] / JClusterResults[len(JClusterResults)-2] > .999):
                 converged = True 
     
@@ -171,8 +97,7 @@ def accuracy_test(images, ethnicity, trainingSet):
     count = 0
     #re-normalizing!
     for image in images:
-        for j in range((len(image['pix']))):
-            image['pix'][j] = image['pix'][j] * 255.0
+        image['pix'] = denormalizeImage(image['pix'])
 
     for i in range(len(trainingSet)):
         if int(images[i]['class']) == int(images[i]['age']):
@@ -186,32 +111,31 @@ def predetermineReps(imageData, inputReps):
         rep = {'pix': imageData[set_[i]]['pix'].copy(), 'class': i}
         inputReps.append(rep)
     for rep in inputReps:
-        for j in range((len(rep['pix']))):
-            rep['pix'][j] = rep['pix'][j] / 255.0 
+        rep['pix'] = normalizeImage(rep['pix'])
     return inputReps
 
+# makes it so code isn't run when file is imported:
+if __name__ == "__main__":
+    rows = []
+    pixels = []
+    imageData = []
+    labels = []
+    ethnicity = []
+    #rows, imageData, ethnicity, pixels = loadData()
+    babiesOldiesData = getBabiesOldies()
+
+    inputReps = []
+    inputRepClasses = []
+
+    inputReps = predetermineReps(babiesOldiesData, inputReps)
 
 
-rows = []
-pixels = []
-imageData = []
-labels = []
-ethnicity = []
-#rows, imageData, ethnicity, pixels = loadData()
-babiesOldiesData = getBabiesOldies()
 
-inputReps = []
-inputRepClasses = []
+    reps, JClustResults, imageResults, trainingIndices  = kmeans(babiesOldiesData, 100, inputReps)
+    print(accuracy_test(imageResults, ethnicity, trainingIndices))
 
-inputReps = predetermineReps(babiesOldiesData, inputReps)
-
-
-
-reps, JClustResults, imageResults, trainingIndices  = kmeans(babiesOldiesData, 100, inputReps)
-print(accuracy_test(imageResults, ethnicity, trainingIndices))
-
-print(JClustResults)
-print(len(JClustResults))
+    print(JClustResults)
+    print(len(JClustResults))
 
 
 """ for rep in reps:
@@ -222,7 +146,7 @@ print(len(JClustResults))
 
 
 
-#rows = np.array(rows, dtype=object)
+#rows = np.array(rows   , dtype=object)
 #pixels = np.array(pixels, dtype=object)
 """ dataSize = (len(rows))
 trainingSetSize = 19754
