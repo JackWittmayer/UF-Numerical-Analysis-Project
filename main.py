@@ -54,9 +54,10 @@ def kmeans(imageInput, trainingSetSize, inputReps):
             # Grab a random image from images, copy its pixels, and create a new dictionary from it:
             rep = {'pix': images[random.randint(0, len(images)-1)]['pix'].copy(), 'class': i}
             reps.append(rep)
-            displayImage(rep['pix'], True)
     else:
         reps = inputReps
+        #for rep in reps:
+            #displayImage(rep['pix'], True)
 
     # Do the next two parts [iterationCount] times:
     loop = 0
@@ -67,6 +68,7 @@ def kmeans(imageInput, trainingSetSize, inputReps):
         # Find minimum distance from an image to a representative:
         for i in range(len(images)):
             # Initialize minimum distance to the distance to the first representative:
+            #displayImage(images[i]['pix'], True)
             minDist = meanSquareDistance(reps[0]['pix'], images[i]['pix'])
             images[i]['class'] = reps[0]['class']
 
@@ -128,70 +130,8 @@ if __name__ == "__main__":
     inputRepClasses = []
 
     inputReps = predetermineReps(babiesOldiesData, inputReps)
-
-
-
     reps, JClustResults, imageResults, trainingIndices  = kmeans(babiesOldiesData, 100, inputReps)
     print(accuracy_test(imageResults, ethnicity, trainingIndices))
 
     print(JClustResults)
     print(len(JClustResults))
-
-
-""" for rep in reps:
-    
-    for i in range(len(rep['pix'])):
-        rep['pix'][i] = rep['pix'][i] * 255
-    displayImage(rep['pix']) """
-
-
-
-#rows = np.array(rows   , dtype=object)
-#pixels = np.array(pixels, dtype=object)
-""" dataSize = (len(rows))
-trainingSetSize = 19754
-testDataSize = dataSize - 19754
-x_train = []
-x_test = []
-y_train = []
-y_test = []
-
-luckyHat = random.sample(range(23705), 1000)
-luckyHat.sort(reverse=True)
-for i in range(0, len(luckyHat)):
-    x_train.append(pixels[luckyHat[i]])
-    y_train.append(ethnicity[luckyHat[i]])
-    del pixels[luckyHat[i]]
-    del ethnicity[luckyHat[i]]
-
-for i in range(0, testDataSize):
-    x_test.append(pixels[i])
-    y_test.append(ethnicity[i])
-x_train = np.array(x_train, dtype=np.uint8)
-x_test = np.array(x_test, dtype=np.uint8)
-x_train = int(x_train / 255.0)
-x_test = int(x_test / 255.0)
-y_train = np.array(y_train)
-y_test = np.array(y_test)
-print(x_train.shape)
- 
-kMeansAlg = MiniBatchKMeans(n_clusters=4).fit(x_train)
-predictions = kMeansAlg.predict(x_test)
-
-for i in range(len(predictions)):
-    count = 0
-    if int(predictions[i]) == int(y_test[i]):
-        count += 1
-print('accuracy of library func: ' + str(count/len(predictions))) """
-
-
-
-
-
-
-
-
-
-#to do
-#make training and test data partitions
-#normalize data to be between 0-1

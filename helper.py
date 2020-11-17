@@ -24,7 +24,9 @@ def denormalizeImage(pixels):
 # takes second parameter for whether or not to denormalize the image
 def displayImage(pixels, denormalize = False):
     if denormalize:
-        pixels = denormalizeImage(pixels)
+        pixelCopy = pixels.copy()
+        pixelCopy= denormalizeImage(pixelCopy)
+        pixels = pixelCopy
     pixArray = np.array(pixels)
     pixArray2D = np.reshape(pixArray, (-1, 48))
     img = Image.fromarray(pixArray2D)
