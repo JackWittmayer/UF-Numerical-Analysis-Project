@@ -4,7 +4,6 @@ import random
 import random
 from PIL import Image
 from dataLoader import loadData, createImageDictionaries, getBabiesOldies
-from sklearn.cluster import MiniBatchKMeans
 
 # File containing all the helper methods unrelated to loading data
 
@@ -97,3 +96,16 @@ def findAvgFace(images, ethnicities, selection):
         avgPix[i] //= len(filteredImages)
 
     displayImage(avgPix)
+
+# Saves an image to the images directory:
+def saveImage(imageDict):
+    pixArray = np.array(imageDict['pix'])
+    pixArray2D = np.reshape(pixArray, (-1, 48))
+    img = Image.fromarray(pixArray2D)
+    img = img.convert('RGB')
+    img.save("images/" + imageDict['imgname'])
+
+# Creates a jpg file for every image in the dataset and saves it to an images folder:
+def createImageDirectory():
+    for dict in createImageDictionaries():
+        saveImage(dict)

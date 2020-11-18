@@ -1,11 +1,11 @@
 import csv
-import numpy as np
 import random
 import random
 from PIL import Image
 from dataLoader import loadData, createImageDictionaries, getBabiesOldies
+from face_recognition import *
 from helper import *
-from sklearn.cluster import MiniBatchKMeans
+import pickle
 
 ''' k means algorithm steps:
 1. pick random representatives
@@ -123,6 +123,7 @@ if __name__ == "__main__":
     imageData = []
     labels = []
     ethnicity = []
+
     #rows, imageData, ethnicity, pixels = loadData()
     babiesOldiesData = getBabiesOldies()
 
@@ -135,3 +136,4 @@ if __name__ == "__main__":
 
     print(JClustResults)
     print(len(JClustResults))
+
