@@ -97,10 +97,11 @@ def kmeans(imageInput, trainingSetSize, inputReps):
 def accuracy_test(images, ethnicity, trainingSet):
     
     count = 0
-    #re-normalizing!
+    #de-normalizing!
     for image in images:
         image['pix'] = denormalizeImage(image['pix'])
 
+    #predicting age
     for i in range(len(trainingSet)):
         if int(images[i]['class']) == int(images[i]['age']):
             count += 1
@@ -108,6 +109,7 @@ def accuracy_test(images, ethnicity, trainingSet):
     return count/len(trainingSet)
 
 def predetermineReps(imageData, inputReps):
+    #range here depends on problem type
     for i in range(2):
         set_ = [0, len(imageData)-1]
         rep = {'pix': imageData[set_[i]]['pix'].copy(), 'class': i}
