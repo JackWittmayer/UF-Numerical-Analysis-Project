@@ -75,6 +75,35 @@ def findClassAvg(rep, images):
         avgPix[i] /= classImageCount
     return avgPix
 
+def findClassAvgHOG(rep, images):
+    # displayImage(rep['HOG'])
+
+    # Create empty list of HOGels:
+    avgHOG = [0] * len(images[0]['HOG'])
+    classImageCount = 0
+    count = 0
+    for image in images:
+
+        # if the image belongs to the class we are looking for:
+        if image['class'] == rep['class']:
+            # Skip images that are missing HOGels:
+            if image['HOG'] == None:
+                count += 1
+                continue
+
+            # tally up the number of images that we are averaging:
+            classImageCount += 1
+
+            # iterate over all HOGels in the image and add it to the respective HOGel of avgHOG:
+            for i in range(len(image['HOG'])):
+                avgHOG[i] += float(image['HOG'][i])
+
+    # Divide each sum of HOGels by the number of images to create an average:
+    for i in range(len(avgHOG)):
+        if classImageCount == 0:
+            print('something is fucked!')
+        avgHOG[i] /= classImageCount
+    return avgHOG
 # Experimental function to average all the faces for a given ethnicity (takes forever probably doesn't work)
 def findAvgFace(images, ethnicities, selection):
     # Filter all images that have the selected ethnicity:

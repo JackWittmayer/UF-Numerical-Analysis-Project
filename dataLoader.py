@@ -4,6 +4,44 @@ from PIL import Image
 import pickle
 
 # Turn csv file into list of dictionaries containing values for pixels, ethnicity, age, etc:
+# This is the new version that has the pix and HOG data in the dictionary
+def createHOGDicts():
+    # Attempt to read pickle file called "hogDict" before reading CSV...
+    # Can read pickle file MUCH faster than CSV. FASTER IS BETTER.
+    try:
+        infile = open("hogDict", 'rb')
+        images = pickle.load(infile)
+        infile.close()
+        return images
+    except IOError:
+        print("No newDicts pickle file found. Creating it...")
+        images = []
+
+        with open('vectors.csv', 'r') as csvfile:
+            data = csv.reader(csvfile, delimiter=',', quotechar='|')
+            fields = next(data)
+            for row in data:
+                HOG = []
+                age = row[0]
+                ethnicity = row[1]
+                gender = row[2]
+                imgname = row[3]
+
+                # Turn list of strings into list of ints:
+                for i in range(4,132):
+                    HOG.append(float(row[i]))
+
+                imageDict = {'age': int(age), 'ethnicity': int(ethnicity), 'gender': int(gender), 'imgname': imgname,
+                             'HOG': HOG, 'pix': [],
+
+                             'class': 0}
+                images.append(imageDict)
+
+            # Write imageDict to pickled file to make initial data loading faster:
+            outfile = open("hogDict", 'wb')
+            pickle.dump(images, outfile)
+            outfile.close()
+            return images
 
 # Turn csv file into list of dictionaries containing values for pixels, ethnicity, age, etc:
 def createImageDictionaries():
@@ -55,7 +93,19 @@ def getBabiesOldies():
             if image['age'] > 90:
                 image['age'] = 1
             output.append(image) 
-    return output 
+    return output
+
+def getBabiesOldiesHOG():
+    images = createHOGDicts()
+    output = []
+    for image in images:
+        if image['age'] < 2 or image['age'] > 90:
+            if image['age'] < 3:
+                image['age'] = 0
+            if image['age'] > 90:
+                image['age'] = 1
+            output.append(image)
+    return output
 
 def loadData():
     rows = []
@@ -89,3 +139,39 @@ def loadData():
         
         return rows, images, ethnicity, pixelData
         #48*48 images
+
+def addPixelsToHOG():
+    HOGDICT = createHOGDicts()
+    PIXDICT = createImageDictionaries()
+    try:
+        infile = open("hogDict", 'rb')
+        HOGDICT = pickle.load(infile)
+        infile.close()
+        print("SUCCESSFULLY READ PICKLE")
+    except IOError:
+        print("MAKING PICKLE")
+        for hdict in HOGDICT:
+            for pdict in PIXDICT:
+                if hdict['imgname'] == pdict['imgname']:
+                    hdict['pix'] = pdict['pix']
+
+        outfile = open("hogDict", 'wb')
+        pickle.dump(HOGDICT, outfile)
+        outfile.close()
+
+    newVectors = open("newVectors.csv", 'w')
+
+    newVectors.write('age' + ','+ 'ethnicity' + ',' + 'gender' + ',' + 'image Name' + "\n")
+    for dict in HOGDICT:
+        newVectors.write(str(dict['age']) + ',' + str(dict['ethnicity']) + ',' + str(dict['gender']) + ',' + str(dict['imgname']) + ',')
+        for val in dict['HOG']:
+            newVectors.write(str(val) + ',')
+        for i in range(len(dict['pix'])):
+            dict['pix'][i] = str(dict['pix'][i])
+
+        print("DICT PIX", dict['pix'])
+        pixString = " ".join(dict['pix'])
+
+        print("PIX STRING", pixString)
+        newVectors.write(pixString + "\n")
+    newVectors.close()
