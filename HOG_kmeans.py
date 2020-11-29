@@ -3,7 +3,7 @@ import random
 import random
 from PIL import Image
 from dataLoader import loadData, createImageDictionaries, getBabiesOldiesHOG
-#from face_recognition import *
+from face_recognition import *
 from helper import *
 import pickle
 
@@ -115,13 +115,25 @@ def predetermineReps(imageData, inputReps):
 # Function to run kmeans many times and return the best result:
 def iterateKmeans(imageInput, trainingSetSize, maxIterations = 50):
     accuracies = []
+    bestAccuracy = 0
+    bestReps = []
     for i in range(maxIterations):
         reps, JClustResults, imageResults, trainingIndices = kmeans(imageInput, trainingSetSize, [])
         accuracy = accuracy_test(imageResults, trainingIndices)
         print("Accuracy of kmeans test", i + 1, ":", accuracy)
         accuracies.append(accuracy)
+        if accuracy > bestAccuracy:
+            bestReps = reps
+            bestAccuracy = accuracy
     accuracies.sort(reverse = True)
     print("Top three accuracies:", accuracies[0], accuracies[1], accuracies[2])
+
+    # Uncomment to predict the class of one face using distance to best reps:
+
+    # closestRep = testOneFace(bestReps, processOneImage("old_dude.jpg"))
+    # print(closestRep["class"])
+    # closestRep = testOneFace(bestReps, processOneImage("baby.jpg"))
+    # print(closestRep["class"])
 
 # makes it so code isn't run when file is imported:
 if __name__ == "__main__":

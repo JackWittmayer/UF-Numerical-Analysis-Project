@@ -139,3 +139,14 @@ def saveImage(imageDict):
 def createImageDirectory():
     for dict in createImageDictionaries():
         saveImage(dict)
+
+# Checks which rep an image is closer to:
+def testOneFace(reps, testImageVector):
+    minDist = meanSquareDistance(reps[0]["HOG"], testImageVector)
+    minRep = reps[0]
+    for rep in reps[1:]:
+        dist = meanSquareDistance(rep["HOG"], testImageVector)
+        if dist < minDist:
+            minDist = dist
+            minRep = rep
+    return minRep
