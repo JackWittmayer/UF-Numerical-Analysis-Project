@@ -102,7 +102,8 @@ def findClassAvgHOG(rep, images):
     for i in range(len(avgHOG)):
         if classImageCount == 0:
             print('something is fucked!')
-        avgHOG[i] /= classImageCount
+        else:
+            avgHOG[i] /= classImageCount
     return avgHOG
 # Experimental function to average all the faces for a given ethnicity (takes forever probably doesn't work)
 def findAvgFace(images, ethnicities, selection):
