@@ -82,7 +82,7 @@ def createImageDictionaries():
             return images
 
 
-
+# Creates babies and oldies without HOG data:
 def getBabiesOldies():
     images = createImageDictionaries()
     output = []
@@ -95,6 +95,7 @@ def getBabiesOldies():
             output.append(image) 
     return output
 
+# Creates babies and oldies images with the HOG data:
 def getBabiesOldiesHOG():
     images = createHOGDicts()
     output = []
@@ -140,7 +141,10 @@ def loadData():
         return rows, images, ethnicity, pixelData
         #48*48 images
 
+
+# function to merge the HOG dicts with the pixel dicts (probably not needed anymore):
 def addPixelsToHOG():
+    # Create
     HOGDICT = createHOGDicts()
     PIXDICT = createImageDictionaries()
     try:

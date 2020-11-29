@@ -53,7 +53,6 @@ def kmeans(imageInput, trainingSetSize, inputReps):
             # Grab a random image from images, copy its HOGels, and create a new dictionary from it:
             rep = {'pix': images[randomInt]['pix'].copy(), 'HOG': images[randomInt]['HOG'].copy(), 'class': i}
             reps.append(rep)
-            print("pix length", len(rep['pix']))
             #displayImage(rep['pix'])
     else:
         reps = inputReps
@@ -113,6 +112,16 @@ def predetermineReps(imageData, inputReps):
         inputReps.append(rep)
     return inputReps
 
+# Function to run kmeans many times and return the best result:
+def iterateKmeans(imageInput, trainingSetSize, maxIterations = 50):
+    accuracies = []
+    for i in range(maxIterations):
+        reps, JClustResults, imageResults, trainingIndices = kmeans(imageInput, trainingSetSize, [])
+        accuracy = accuracy_test(imageResults, trainingIndices)
+        print("Accuracy of kmeans test", i + 1, ":", accuracy)
+        accuracies.append(accuracy)
+    accuracies.sort(reverse = True)
+    print("Top three accuracies:", accuracies[0], accuracies[1], accuracies[2])
 
 # makes it so code isn't run when file is imported:
 if __name__ == "__main__":
@@ -128,10 +137,7 @@ if __name__ == "__main__":
     inputReps = []
     inputRepClasses = []
 
+    # Must predetermine reps in order to have baby rep and old guy rep in order to get .98, unless we get lucky:
     inputReps = predetermineReps(babiesOldiesData, inputReps)
-    reps, JClustResults, imageResults, trainingIndices = kmeans(babiesOldiesData, 100, inputReps)
-    print(accuracy_test(imageResults, trainingIndices))
-
-    print(JClustResults)
-    print(len(JClustResults))
+    iterateKmeans(babiesOldiesData, 100, 50)
 
