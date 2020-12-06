@@ -3,8 +3,9 @@ import random
 import random
 from PIL import Image
 from dataLoader import loadData, createImageDictionaries, getBabiesOldiesHOG, getRandomSampleHOG
-#from face_recognition import *
+from face_recognition import *
 from helper import *
+from statistics import mode
 import pickle
 
 ''' k means algorithm steps:
@@ -26,9 +27,46 @@ def Jclust(reps, images):
 
 #experimental function to map blind labels to corresponding label in original dataset
 def mapLabels(images, clusterNum, testType):
-    
+    print("Mapping labels to class")
+    inferred_labels = {}
     for i in range(clusterNum):
-        mask = (images['pix'] == )
+        labels = []
+        # 1. Make array of all the images where class = i
+        def isPartOfClass(image):
+            if (image['class'] == i):
+                return True
+        index = list(filter(isPartOfClass, images))
+        # 2. Find the actual label for each image and append it to new array
+        labels = [image[testType] for image in index]
+        if len(labels) == 0:
+            print("length of labels is 0")
+            return
+
+        # 3. Find most common label for that cluster using actual labels
+        most_common_label = mode(labels)
+
+        # 4. Append that label to a dictionary. Key = most common label, value: class
+        if most_common_label in inferred_labels:
+            inferred_labels[most_common_label].append(i)
+        else:
+            inferred_labels[most_common_label] = [i]
+
+    print(inferred_labels)
+
+    # Change class values to actual label from inferred_labels:
+    for image in images:
+
+        # iterate over all the actual labels:
+        for actual_label in inferred_labels:
+
+            # find what actual_label corresponds to that cluster:
+            if image['class'] in inferred_labels[actual_label]:
+
+                # assign that label to the class:
+                image['class'] = actual_label
+                break
+
+
 
 #given the reps of a completed kmeans and a set of hogdicts, predict what their class would be
 def predict(reps, images):
@@ -115,9 +153,6 @@ def kmeans(imageInput, trainingSetSize, inputReps, clusterNum):
 def accuracy_testAge(images, trainingSet):
     
     count = 0
-    #de-normalizing!
-    for image in images:
-        image['pix'] = denormalizeImage(image['pix'])
 
     #predicting age
     for i in range(len(trainingSet)):
@@ -180,17 +215,25 @@ def iterateKmeans(imageInput, trainingSetSize, testType, clusterNum, maxIteratio
     accuracies = []
     bestAccuracy = 0
     bestReps = []
+    bestDicts = []
+    worstDicts = []
     for i in range(maxIterations):
         reps, JClustResults, imageResults, trainingIndices = kmeans(imageInput, trainingSetSize, [], clusterNum)
+        mapLabels(imageResults, clusterNum, testType)
         accuracy = accuracy_test(imageResults, trainingIndices, testType)
         print("Accuracy of kmeans test", i + 1, ":", accuracy)
         accuracies.append(accuracy)
         if accuracy > bestAccuracy:
             bestReps = reps
             bestAccuracy = accuracy
+            bestDicts = imageResults
+        # Grab inverted label dictionaries
+        if accuracy <= 0.05:
+            worstDicts = imageResults
+            print("Inverted dictionary accuracy:", accuracy)
     accuracies.sort(reverse = True)
     print("Top three accuracies:", accuracies[0], accuracies[1], accuracies[2])
-    return bestReps
+    return bestReps, bestDicts, worstDicts
     # Uncomment to predict the class of one face using distance to best reps:
 
     # closestRep = testOneFace(bestReps, processOneImage("old_dude.jpg"))
@@ -214,5 +257,5 @@ if __name__ == "__main__":
 
     # Must predetermine reps in order to have baby rep and old guy rep in order to get .98, unless we get lucky:
     inputReps = predetermineReps(babiesOldiesData, inputReps)
-    bestReps = iterateKmeans(randomSample, 100, 'ethnicity', 5, 50)
+    bestReps, bestDicts, worstDicts = iterateKmeans(babiesOldiesData, 100, 'age', 2, 10)
 

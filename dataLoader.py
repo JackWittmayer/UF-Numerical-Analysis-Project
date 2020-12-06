@@ -101,10 +101,10 @@ def getBabiesOldiesHOG():
     images = createHOGDicts()
     output = []
     for image in images:
-        if image['age'] < 2 or image['age'] > 90:
+        if image['age'] < 2 or image['age'] >= 80:
             if image['age'] < 3:
                 image['age'] = 0
-            if image['age'] > 90:
+            if image['age'] >= 80:
                 image['age'] = 1
             output.append(image)
     return output
