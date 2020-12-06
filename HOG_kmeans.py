@@ -2,8 +2,8 @@ import csv
 import random
 import random
 from PIL import Image
-from dataLoader import loadData, createImageDictionaries, getBabiesOldiesHOG
-from face_recognition import *
+from dataLoader import loadData, createImageDictionaries, getBabiesOldiesHOG, getRandomSampleHOG
+#from face_recognition import *
 from helper import *
 import pickle
 
@@ -24,11 +24,28 @@ def Jclust(reps, images):
                     sum = sum + abs(image['HOG'][j] - rep['HOG'][j]) ** 2
     return (sum / len(images))
 
+#experimental function to map blind labels to corresponding label in original dataset
+def mapLabels(images, clusterNum, testType):
+    
+    for i in range(clusterNum):
+        mask = (images['pix'] == )
 
+#given the reps of a completed kmeans and a set of hogdicts, predict what their class would be
+def predict(reps, images):
+    for image in images:
+        min = meanSquareDistance(reps[0]['pix'], image['pix'])
+        image['class'] = reps[0]['class']
+        for i in range(1, len(reps)):
+            if meanSquareDistance(reps[i]['pix'], image['pix']) < min:
+                min = meanSquareDistance(reps[i]['pix'], image['pix'])
+                image['class'] = reps[i]['class']
+
+
+#Kmeans now takes in clusterNum as input, so we can run it on gender, ethnicity, or age easily
 # Attempted implementation of the kmeans algorithm the professor showed in class:
-def kmeans(imageInput, trainingSetSize, inputReps):
+def kmeans(imageInput, trainingSetSize, inputReps, clusterNum):
     print('running k means!')
-    clusterNumber = 2  # number of expected clusters, will probably be in the order of hundreds
+    clusterNumber = clusterNum  # number of expected clusters, will probably be in the order of hundreds
     # iterations count should be dependent on convergence of Jclust function
     images = []
     trainingSetIndicies = []
@@ -95,15 +112,60 @@ def kmeans(imageInput, trainingSetSize, inputReps):
     return reps, JClusterResults, images, trainingSetIndicies
 
 
-def accuracy_test(images, trainingSet):
+def accuracy_testAge(images, trainingSet):
+    
     count = 0
-    # Checking for age matches
+    #de-normalizing!
+    for image in images:
+        image['pix'] = denormalizeImage(image['pix'])
+
+    #predicting age
     for i in range(len(trainingSet)):
         if int(images[i]['class']) == int(images[i]['age']):
             count += 1
+            
+    return count/len(trainingSet)
 
-    return count / len(trainingSet)
+def accuracy_testEthnicity(images, trainingSet):
+    
+    count = 0
+    #de-normalizing!
+    for image in images:
+        image['pix'] = denormalizeImage(image['pix'])
 
+    #predicting age
+    for i in range(len(trainingSet)):
+        if int(images[i]['class']) == int(images[i]['ethnicity']):
+            count += 1
+            
+    return count/len(trainingSet)
+
+def accuracy_testGender(images, trainingSet):
+    
+    count = 0
+    #de-normalizing!
+    for image in images:
+        image['pix'] = denormalizeImage(image['pix'])
+
+    #predicting age
+    for i in range(len(trainingSet)):
+        if int(images[i]['class']) == int(images[i]['gender']):
+            count += 1
+            
+    return count/len(trainingSet)
+
+
+def accuracy_test(images, trainingSet, testType):
+    if testType == 'age':
+        return accuracy_testAge(images, trainingSet)
+    elif testType == 'ethnicity':
+        return accuracy_testEthnicity(images, trainingSet)
+    elif testType == 'gender':
+        return accuracy_testGender(images, trainingSet)
+    else:
+        print('test types are: age, gender, ethnicity. You specified none of them')
+        
+    return
 
 def predetermineReps(imageData, inputReps):
     for i in range(2):
@@ -113,13 +175,14 @@ def predetermineReps(imageData, inputReps):
     return inputReps
 
 # Function to run kmeans many times and return the best result:
-def iterateKmeans(imageInput, trainingSetSize, maxIterations = 50):
+#changed kMeans to have test type as input to make it more general
+def iterateKmeans(imageInput, trainingSetSize, testType, clusterNum, maxIterations = 50):
     accuracies = []
     bestAccuracy = 0
     bestReps = []
     for i in range(maxIterations):
-        reps, JClustResults, imageResults, trainingIndices = kmeans(imageInput, trainingSetSize, [])
-        accuracy = accuracy_test(imageResults, trainingIndices)
+        reps, JClustResults, imageResults, trainingIndices = kmeans(imageInput, trainingSetSize, [], clusterNum)
+        accuracy = accuracy_test(imageResults, trainingIndices, testType)
         print("Accuracy of kmeans test", i + 1, ":", accuracy)
         accuracies.append(accuracy)
         if accuracy > bestAccuracy:
@@ -127,7 +190,7 @@ def iterateKmeans(imageInput, trainingSetSize, maxIterations = 50):
             bestAccuracy = accuracy
     accuracies.sort(reverse = True)
     print("Top three accuracies:", accuracies[0], accuracies[1], accuracies[2])
-
+    return bestReps
     # Uncomment to predict the class of one face using distance to best reps:
 
     # closestRep = testOneFace(bestReps, processOneImage("old_dude.jpg"))
@@ -145,11 +208,11 @@ if __name__ == "__main__":
 
     # rows, imageData, ethnicity, HOGels = loadData()
     babiesOldiesData = getBabiesOldiesHOG()
-
+    randomSample = getRandomSampleHOG(100)
     inputReps = []
     inputRepClasses = []
 
     # Must predetermine reps in order to have baby rep and old guy rep in order to get .98, unless we get lucky:
     inputReps = predetermineReps(babiesOldiesData, inputReps)
-    iterateKmeans(babiesOldiesData, 100, 50)
+    bestReps = iterateKmeans(randomSample, 100, 'ethnicity', 5, 50)
 

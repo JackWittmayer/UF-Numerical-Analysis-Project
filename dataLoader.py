@@ -1,5 +1,6 @@
 import csv
 import numpy as np
+import random
 from PIL import Image
 import pickle
 
@@ -55,7 +56,7 @@ def createImageDictionaries():
     except IOError:
         print("No imageDicts pickle file found. Creating it...")
         images = []
-        with open('../age_gender.csv', 'r') as csvfile:
+        with open('age_gender.csv', 'r') as csvfile:
             data = csv.reader(csvfile, delimiter=',', quotechar='|')
             fields = next(data)
             for row in data:
@@ -106,6 +107,16 @@ def getBabiesOldiesHOG():
             if image['age'] > 90:
                 image['age'] = 1
             output.append(image)
+    return output
+
+#given size of sample, returns random sample from data
+def getRandomSampleHOG(size):
+    images = createHOGDicts()
+    selections = random.sample(range(len(images)), size)
+    output = []
+    for i in range(0, len(selections)):
+        output.append(images[selections[i]])
+    
     return output
 
 def loadData():
