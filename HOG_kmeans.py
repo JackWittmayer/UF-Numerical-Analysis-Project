@@ -217,6 +217,8 @@ def iterateKmeans(imageInput, trainingSetSize, testType, clusterNum, maxIteratio
     bestReps = []
     bestDicts = []
     worstDicts = []
+    imageInput = getDistributedData(imageInput, clusterNum, testType)
+
     for i in range(maxIterations):
         reps, JClustResults, imageResults, trainingIndices = kmeans(imageInput, trainingSetSize, [], clusterNum)
         mapLabels(imageResults, clusterNum, testType)
@@ -251,11 +253,13 @@ if __name__ == "__main__":
 
     # rows, imageData, ethnicity, HOGels = loadData()
     babiesOldiesData = getBabiesOldiesHOG()
-    randomSample = getRandomSampleHOG(100)
+    babiesMiddiesOldies = getBabiesMiddiesOldiesHOG()
+
+    randomSample = getRandomSampleHOG(10000)
     inputReps = []
     inputRepClasses = []
 
     # Must predetermine reps in order to have baby rep and old guy rep in order to get .98, unless we get lucky:
     inputReps = predetermineReps(babiesOldiesData, inputReps)
-    bestReps, bestDicts, worstDicts = iterateKmeans(babiesOldiesData, 100, 'age', 2, 10)
+    bestReps, bestDicts, worstDicts = iterateKmeans(randomSample, 1000, 'ethnicity', 15, 25)
 

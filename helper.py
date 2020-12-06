@@ -101,7 +101,7 @@ def findClassAvgHOG(rep, images):
     # Divide each sum of HOGels by the number of images to create an average:
     for i in range(len(avgHOG)):
         if classImageCount == 0:
-            print('something is fucked!')
+            pass
         else:
             avgHOG[i] /= classImageCount
     return avgHOG
@@ -150,3 +150,16 @@ def testOneFace(reps, testImageVector):
             minDist = dist
             minRep = rep
     return minRep
+
+def getDistributedData(images, clusterNum, testType, size = 500):
+    newImages = []
+    clusterCounts = [0] * clusterNum
+
+    for image in images:
+        #loop thru images and if their testType value = i, then add to array
+        #size of array limited to insure somewhat equal data distribution
+        for i in range(clusterNum):
+            if image[testType] == i and clusterCounts[i] < size:
+                newImages.append(image)
+                clusterCounts[i] +=1
+    return newImages

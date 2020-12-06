@@ -109,6 +109,24 @@ def getBabiesOldiesHOG():
             output.append(image)
     return output
 
+def getBabiesMiddiesOldiesHOG():
+    images = createHOGDicts()
+    output = []
+
+    for image in images:
+        if image['age'] < 2 or image['age'] >= 80:
+            if image['age'] < 3:
+                image['age'] = 0
+
+            if image['age'] >= 80:
+                image['age'] = 2
+            output.append(image)
+        if image['age'] >= 25 and image['age'] <= 30:
+            image['age'] = 1
+            output.append(image)
+    return output
+
+
 #given size of sample, returns random sample from data
 def getRandomSampleHOG(size):
     images = createHOGDicts()
