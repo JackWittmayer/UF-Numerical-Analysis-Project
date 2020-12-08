@@ -38,9 +38,10 @@ def mapLabels(images, clusterNum, testType):
         index = list(filter(isPartOfClass, images))
         # 2. Find the actual label for each image and append it to new array
         labels = [image[testType] for image in index]
+        # ignore clusters that have no images in them:
         if len(labels) == 0:
             print("length of labels is 0")
-            return
+            continue
 
         # 3. Find most common label for that cluster using actual labels
         most_common_label = mode(labels)
@@ -261,5 +262,5 @@ if __name__ == "__main__":
 
     # Must predetermine reps in order to have baby rep and old guy rep in order to get .98, unless we get lucky:
     inputReps = predetermineReps(babiesOldiesData, inputReps)
-    bestReps, bestDicts, worstDicts = iterateKmeans(randomSample, 1000, 'ethnicity', 15, 25)
+    bestReps, bestDicts, worstDicts = iterateKmeans(randomSample, 1000, 'ethnicity', 100, 25)
 

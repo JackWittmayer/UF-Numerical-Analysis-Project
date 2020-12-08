@@ -162,4 +162,6 @@ def getDistributedData(images, clusterNum, testType, size = 500):
             if image[testType] == i and clusterCounts[i] < size:
                 newImages.append(image)
                 clusterCounts[i] +=1
+                # no need to check for other i values once we found a match, so break:
+                break
     return newImages
