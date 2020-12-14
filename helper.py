@@ -4,6 +4,7 @@ import random
 import random
 from PIL import Image
 from dataLoader import loadData, createImageDictionaries, getBabiesOldies
+import matplotlib.pyplot as plt
 
 # File containing all the helper methods unrelated to loading data
 
@@ -165,3 +166,44 @@ def getDistributedData(images, clusterNum, testType, size = 500):
                 # no need to check for other i values once we found a match, so break:
                 break
     return newImages
+
+
+sums_over_iterations = []
+genderGraphCount = 0
+# returns a list of how many images are in each cluster:
+def sumClusters(images, clusterNum):
+    sums = [0] * clusterNum
+    for image in images:
+        sums[image['class']] += 1
+    sums_over_iterations.append(sums)
+    return sums
+
+def createGraphOfClusterSums(testType):
+    global genderGraphCount
+    global sums_over_iterations
+    print(sums_over_iterations)
+    clusters = []
+    for i in range(len(sums_over_iterations[0])):
+        clusters.append([])
+    legendHandles = []
+    legendLabels = []
+    for sums in sums_over_iterations:
+        for i in range(len(sums)):
+            cluster = clusters[i]
+            #print(cluster)
+            cluster.append(sums[i])
+    for i in range(len(clusters)):
+        legendHandle, = plt.plot(clusters[i], label = "cluster " + str(i))
+        legendHandles.append(legendHandle)
+        legendLabels.append("cluster " + str(i))
+    plt.legend(legendHandles, legendLabels)
+    plt.ylabel('# images in cluster')
+    plt.xlabel("Kmeans iteration")
+    plt.title("# images in each " + testType + " cluster over iterations")
+    plt.savefig(testType+ "_clusters" + str(genderGraphCount) + ".png")
+    genderGraphCount+= 1
+    plt.show()
+    sums_over_iterations = []
+
+
+

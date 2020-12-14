@@ -40,7 +40,7 @@ def mapLabels(images, clusterNum, testType):
         labels = [image[testType] for image in index]
         # ignore clusters that have no images in them:
         if len(labels) == 0:
-            print("length of labels is 0")
+            #print("length of labels is 0")
             continue
 
         # 3. Find most common label for that cluster using actual labels
@@ -118,6 +118,7 @@ def kmeans(imageInput, trainingSetSize, inputReps, clusterNum):
     # Do the next two parts [iterationCount] times:
     loop = 0
     converged = False
+    sumClusters(images, clusterNum)
     while (converged == False):
         loop += 1
         # PART 2: ASSIGN CLASS TO EACH DATA POINT (IMAGE) BASED ON CLOSEST REPRESENTATIVE:
@@ -135,6 +136,8 @@ def kmeans(imageInput, trainingSetSize, inputReps, clusterNum):
                 if dist < minDist:
                     minDist = dist
                     images[i]['class'] = rep['class']
+        # tracks how many images are in each cluster. Makes no change to data.
+        sumClusters(images, clusterNum)
 
         # PART 3: FIND AVERAGE POSITION OF EACH IMAGE IN EACH CLASS, MAKE THAT THE NEW REPRESENTATIVE:
 
@@ -222,6 +225,7 @@ def iterateKmeans(imageInput, trainingSetSize, testType, clusterNum, maxIteratio
 
     for i in range(maxIterations):
         reps, JClustResults, imageResults, trainingIndices = kmeans(imageInput, trainingSetSize, [], clusterNum)
+        createGraphOfClusterSums(testType)
         mapLabels(imageResults, clusterNum, testType)
         accuracy = accuracy_test(imageResults, trainingIndices, testType)
         print("Accuracy of kmeans test", i + 1, ":", accuracy)
@@ -234,6 +238,9 @@ def iterateKmeans(imageInput, trainingSetSize, testType, clusterNum, maxIteratio
         if accuracy <= 0.05:
             worstDicts = imageResults
             print("Inverted dictionary accuracy:", accuracy)
+        # reset classes to 0!
+        for image in imageInput:
+            image['class'] = 0
     accuracies.sort(reverse = True)
     print("Top three accuracies:", accuracies[0], accuracies[1], accuracies[2])
     return bestReps, bestDicts, worstDicts
@@ -262,5 +269,5 @@ if __name__ == "__main__":
 
     # Must predetermine reps in order to have baby rep and old guy rep in order to get .98, unless we get lucky:
     inputReps = predetermineReps(babiesOldiesData, inputReps)
-    bestReps, bestDicts, worstDicts = iterateKmeans(randomSample, 1000, 'ethnicity', 100, 25)
+    bestReps, bestDicts, worstDicts = iterateKmeans(babiesMiddiesOldies, 1000, 'age', 3, 20)
 
