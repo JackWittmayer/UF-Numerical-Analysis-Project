@@ -97,19 +97,18 @@ def kmeans(imageInput, trainingSetSize, inputReps, clusterNum):
     print('running k means!')
     clusterNumber = clusterNum  # number of expected clusters, will probably be in the order of hundreds
     # iterations count should be dependent on convergence of Jclust function
-    images = []
-    trainingSetIndicies = []
+    #trainingSetIndicies = []
     # pick k random images from images, using all of them takes forever:
-    # images = random.choices(images, k = 1000)
+    images = random.choices(imageInput, k = 1000)
 
     ##Data selection, tracking, then normalization
 
-    set = list(range(0, len(imageInput)))
+    # set = list(range(0, len(imageInput)))
     # set = list(range(0, len(imageInput)-1))
-    random.shuffle(set)
-    for i in range(trainingSetSize):
-        images.append(imageInput[set[i]])
-        trainingSetIndicies.append(set[i])
+    # random.shuffle(set)
+    # for i in range(trainingSetSize):
+    #     images.append(imageInput[set[i]])
+    #     trainingSetIndicies.append(set[i])
 
     # PART 1: CREATE [clusterNumber] RANDOM REPRESENTATIVES:
     reps = []
@@ -162,20 +161,20 @@ def kmeans(imageInput, trainingSetSize, inputReps, clusterNum):
                 converged = True
 
                 # Return the reps so we can see how they were changed:
-    return reps, JClusterResults, images, trainingSetIndicies
+    return reps, JClusterResults, images
 
 # runs through a number of images and tests if their assigned class is equal to their testType value
-def accuracy_test(images, trainingSet, testType):
+def accuracy_test(images, trainingSetSize, testType):
     # make sure the test type is valid:
     if testType not in ['age', 'gender', 'ethnicity']:
         print('test types are: age, gender, ethnicity. You specified none of them')
         return
 
     count = 0
-    for i in range(len(trainingSet)):
+    for i in range(trainingSetSize):
         if int(images[i]['class']) == int(images[i][testType]):
             count += 1
-    return count/len(trainingSet)
+    return count/trainingSetSize
 
 def predetermineReps(imageData, inputReps):
     for i in range(2):
@@ -195,10 +194,10 @@ def iterateKmeans(imageInput, trainingSetSize, testType, clusterNum, maxIteratio
     imageInput = getDistributedData(imageInput, clusterNum, testType)
 
     for i in range(maxIterations):
-        reps, JClustResults, imageResults, trainingIndices = kmeans(imageInput, trainingSetSize, [], clusterNum)
-        createGraphOfClusterSums(testType)
+        reps, JClustResults, imageResults = kmeans(imageInput, trainingSetSize, [], clusterNum)
+        # createGraphOfClusterSums(testType)
         mapLabels(imageResults, clusterNum, testType, reps)
-        accuracy = accuracy_test(imageResults, trainingIndices, testType)
+        accuracy = accuracy_test(imageResults, trainingSetSize, testType)
         print("Accuracy of kmeans test", i + 1, ":", accuracy)
         accuracies.append(accuracy)
         if accuracy > bestAccuracy:
@@ -244,11 +243,13 @@ if __name__ == "__main__":
         testType = input("What will the images be classified on? Age (1) Gender (2), or Ethnicity (3)")
         if testType == '1':
             ageSet = input("What age dataset would you like to use? BabiesOldies (1), BabiesMiddiesOldies (2)")
+            print("Okay, loading dataset...")
             if ageSet == "1":
                 images = getBabiesOldiesHOG()
             elif ageSet == '2':
                 images = getBabiesMiddiesOldiesHOG()
         elif testType == '2' or testType == '3':
+            print("Okay, loading dataset...")
             images = getRandomSampleHOG(10000)
 
         clusterNumber = int(input("How many clusters would you like to have?"))
