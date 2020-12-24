@@ -26,7 +26,7 @@ def Jclust(reps, images):
     return (sum / len(images))
 
 # experimental function to map blind labels to corresponding label in original dataset
-def mapLabels(images, clusterNum, testType):
+def mapLabels(images, clusterNum, testType, reps):
     print("Mapping labels to class")
     inferred_labels = {}
     for i in range(clusterNum):
@@ -65,6 +65,18 @@ def mapLabels(images, clusterNum, testType):
 
                 # assign that label to the class:
                 image['class'] = actual_label
+                break
+
+    # do the same for the reps:
+    for rep in reps:
+        # iterate over all the actual labels:
+        for actual_label in inferred_labels:
+
+            # find what actual_label corresponds to that cluster:
+            if rep['class'] in inferred_labels[actual_label]:
+
+                # assign that label to the class:
+                rep['class'] = actual_label
                 break
 
 
@@ -185,7 +197,7 @@ def iterateKmeans(imageInput, trainingSetSize, testType, clusterNum, maxIteratio
     for i in range(maxIterations):
         reps, JClustResults, imageResults, trainingIndices = kmeans(imageInput, trainingSetSize, [], clusterNum)
         createGraphOfClusterSums(testType)
-        mapLabels(imageResults, clusterNum, testType)
+        mapLabels(imageResults, clusterNum, testType, reps)
         accuracy = accuracy_test(imageResults, trainingIndices, testType)
         print("Accuracy of kmeans test", i + 1, ":", accuracy)
         accuracies.append(accuracy)
@@ -243,7 +255,7 @@ if __name__ == "__main__":
         iterationNum = int(input("How many iterations would you like kmeans to go through before it stops?"))
         testTypeMapper = {'1': 'age', '2': 'gender', '3': 'ethnicity'}
         testType = testTypeMapper[testType]
-        bestReps, bestDicts, worstDicts = iterateKmeans(images, 1000, testType, clusterNumber, iterationNum)
+        reps, bestDicts, worstDicts = iterateKmeans(images, 1000, testType, clusterNumber, iterationNum)
 
     elif rerun == '2':
         fileName = input("What is the name of the file you would like to load?")
@@ -253,7 +265,11 @@ if __name__ == "__main__":
         testType = testTypeMapper[testType]
 
     print("Creation of reps complete. We can now use it to predict the classes of new images.")
-    testImage = input("Enter the file name of the image whose " + testType + " you would like to predict.")
-    HOGvector = processOneImage(testImage)
-    prediction = testOneFace(reps, HOGvector, testType)
+    while True:
+        print("Enter q to stop predicting")
+        testImage = input("Enter the file name of the image whose " + testType + " you would like to predict.")
+        if testImage.lower() == 'q':
+            break
+        HOGvector = processOneImage(testImage)
+        prediction = testOneFace(reps, HOGvector, testType)
 
