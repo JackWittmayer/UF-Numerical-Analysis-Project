@@ -25,7 +25,7 @@ def Jclust(reps, images):
                     sum = sum + abs(image['HOG'][j] - rep['HOG'][j]) ** 2
     return (sum / len(images))
 
-#experimental function to map blind labels to corresponding label in original dataset
+# experimental function to map blind labels to corresponding label in original dataset
 def mapLabels(images, clusterNum, testType):
     print("Mapping labels to class")
     inferred_labels = {}
@@ -68,19 +68,18 @@ def mapLabels(images, clusterNum, testType):
                 break
 
 
-
-#given the reps of a completed kmeans and a set of hogdicts, predict what their class would be
+# given the reps of a completed kmeans and a set of hogdicts, predict what their class would be
 def predict(reps, images):
     for image in images:
-        min = meanSquareDistance(reps[0]['pix'], image['pix'])
+        min = meanSquareDistance(reps[0]['HOG'], image['HOG'])
         image['class'] = reps[0]['class']
         for i in range(1, len(reps)):
-            if meanSquareDistance(reps[i]['pix'], image['pix']) < min:
-                min = meanSquareDistance(reps[i]['pix'], image['pix'])
+            if meanSquareDistance(reps[i]['HOG'], image['HOG']) < min:
+                min = meanSquareDistance(reps[i]['HOG'], image['HOG'])
                 image['class'] = reps[i]['class']
 
 
-#Kmeans now takes in clusterNum as input, so we can run it on gender, ethnicity, or age easily
+# Kmeans now takes in clusterNum as input, so we can run it on gender, ethnicity, or age easily
 # Attempted implementation of the kmeans algorithm the professor showed in class:
 def kmeans(imageInput, trainingSetSize, inputReps, clusterNum):
     print('running k means!')
@@ -203,6 +202,15 @@ def iterateKmeans(imageInput, trainingSetSize, testType, clusterNum, maxIteratio
             image['class'] = 0
     accuracies.sort(reverse = True)
     print("Top three accuracies:", accuracies[0], accuracies[1], accuracies[2])
+
+    # Ask to save best accuracy reps:
+    answer = ""
+    while answer != "y" and answer != "n":
+        answer = input("Would you like to save the reps with accuracy " + str(bestAccuracy) + "? Y/N").lower()
+    if answer == "y":
+        fileName = input("Enter the filename of the reps you would like to write. .pkl will be added to the end.")
+        saveReps(bestReps, fileName)
+
     return bestReps, bestDicts, worstDicts
     # Uncomment to predict the class of one face using distance to best reps:
 
@@ -219,15 +227,33 @@ if __name__ == "__main__":
     labels = []
     ethnicity = []
 
-    # rows, imageData, ethnicity, HOGels = loadData()
-    babiesOldiesData = getBabiesOldiesHOG()
-    babiesMiddiesOldies = getBabiesMiddiesOldiesHOG()
+    rerun = input("Would you like to run kmeans (1) or use existing reps? (2)")
+    if rerun == "1":
+        testType = input("What will the images be classified on? Age (1) Gender (2), or Ethnicity (3)")
+        if testType == '1':
+            ageSet = input("What age dataset would you like to use? BabiesOldies (1), BabiesMiddiesOldies (2)")
+            if ageSet == "1":
+                images = getBabiesOldiesHOG()
+            elif ageSet == '2':
+                images = getBabiesMiddiesOldiesHOG()
+        elif testType == '2' or testType == '3':
+            images = getRandomSampleHOG(10000)
 
-    randomSample = getRandomSampleHOG(10000)
-    inputReps = []
-    inputRepClasses = []
+        clusterNumber = int(input("How many clusters would you like to have?"))
+        iterationNum = int(input("How many iterations would you like kmeans to go through before it stops?"))
+        testTypeMapper = {'1': 'age', '2': 'gender', '3': 'ethnicity'}
+        testType = testTypeMapper[testType]
+        bestReps, bestDicts, worstDicts = iterateKmeans(images, 1000, testType, clusterNumber, iterationNum)
 
-    # Must predetermine reps in order to have baby rep and old guy rep in order to get .98, unless we get lucky:
-    inputReps = predetermineReps(babiesOldiesData, inputReps)
-    bestReps, bestDicts, worstDicts = iterateKmeans(babiesMiddiesOldies, 1000, 'age', 3, 20)
+    elif rerun == '2':
+        fileName = input("What is the name of the file you would like to load?")
+        reps = loadReps(fileName)
+        testType = input("What is the classification type of these reps? Age (1) Gender (2), or Ethnicity (3)")
+        testTypeMapper = {'1': 'age', '2': 'gender', '3': 'ethnicity'}
+        testType = testTypeMapper[testType]
+
+    print("Creation of reps complete. We can now use it to predict the classes of new images.")
+    testImage = input("Enter the file name of the image whose " + testType + " you would like to predict.")
+    HOGvector = processOneImage(testImage)
+    prediction = testOneFace(reps, HOGvector, testType)
 

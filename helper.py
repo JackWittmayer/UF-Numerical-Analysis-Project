@@ -141,8 +141,12 @@ def createImageDirectory():
     for dict in createImageDictionaries():
         saveImage(dict)
 
+# my best guesses at what the ethnicities are. I'm not very sure about 3 and 4.
+ethnicityMap = {0: 'white', 1: "black", '2': "asian", '3': 'indian', '4': 'hispanic'}
+genderMap = {0: 'male', 1: 'female'}
+classMaps = {'ethnicity': ethnicityMap, 'gender': genderMap}
 # Checks which rep an image is closer to:
-def testOneFace(reps, testImageVector):
+def testOneFace(reps, testImageVector, testType):
     minDist = meanSquareDistance(reps[0]["HOG"], testImageVector)
     minRep = reps[0]
     for rep in reps[1:]:
@@ -150,6 +154,7 @@ def testOneFace(reps, testImageVector):
         if dist < minDist:
             minDist = dist
             minRep = rep
+    print("The predicted", testType, "of the person in this image is", classMaps[testType][minRep['class']])
     return minRep
 
 def getDistributedData(images, clusterNum, testType, size = 500):
@@ -190,7 +195,7 @@ def createGraphOfClusterSums(testType):
     for sums in sums_over_iterations:
         for i in range(len(sums)):
             cluster = clusters[i]
-            #print(cluster)
+            # print(cluster)
             cluster.append(sums[i])
     for i in range(len(clusters)):
         legendHandle, = plt.plot(clusters[i], label = "cluster " + str(i))
@@ -204,6 +209,5 @@ def createGraphOfClusterSums(testType):
     genderGraphCount+= 1
     plt.show()
     sums_over_iterations = []
-
 
 

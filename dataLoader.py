@@ -208,3 +208,22 @@ def addPixelsToHOG():
         print("PIX STRING", pixString)
         newVectors.write(pixString + "\n")
     newVectors.close()
+
+
+# function to pickle a list of reps so they don't have to be created again:
+def saveReps(reps, fileName):
+    outfile = open(fileName + ".pkl", 'wb')
+    pickle.dump(reps, outfile)
+    outfile.close()
+
+
+# load a pickled list of reps from a given file name
+def loadReps(fileName):
+    try:
+        infile = open(fileName, 'rb')
+        reps = pickle.load(infile)
+        infile.close()
+        return reps
+    except IOError:
+        print("Error reading", fileName)
+        return []
