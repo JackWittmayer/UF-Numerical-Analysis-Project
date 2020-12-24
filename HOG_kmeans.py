@@ -153,58 +153,18 @@ def kmeans(imageInput, trainingSetSize, inputReps, clusterNum):
                 # Return the reps so we can see how they were changed:
     return reps, JClusterResults, images, trainingSetIndicies
 
-
-def accuracy_testAge(images, trainingSet):
-    
-    count = 0
-
-    #predicting age
-    for i in range(len(trainingSet)):
-        if int(images[i]['class']) == int(images[i]['age']):
-            count += 1
-            
-    return count/len(trainingSet)
-
-def accuracy_testEthnicity(images, trainingSet):
-    
-    count = 0
-    #de-normalizing!
-    for image in images:
-        image['pix'] = denormalizeImage(image['pix'])
-
-    #predicting age
-    for i in range(len(trainingSet)):
-        if int(images[i]['class']) == int(images[i]['ethnicity']):
-            count += 1
-            
-    return count/len(trainingSet)
-
-def accuracy_testGender(images, trainingSet):
-    
-    count = 0
-    #de-normalizing!
-    for image in images:
-        image['pix'] = denormalizeImage(image['pix'])
-
-    #predicting age
-    for i in range(len(trainingSet)):
-        if int(images[i]['class']) == int(images[i]['gender']):
-            count += 1
-            
-    return count/len(trainingSet)
-
-
+# runs through a number of images and tests if their assigned class is equal to their testType value
 def accuracy_test(images, trainingSet, testType):
-    if testType == 'age':
-        return accuracy_testAge(images, trainingSet)
-    elif testType == 'ethnicity':
-        return accuracy_testEthnicity(images, trainingSet)
-    elif testType == 'gender':
-        return accuracy_testGender(images, trainingSet)
-    else:
+    # make sure the test type is valid:
+    if testType not in ['age', 'gender', 'ethnicity']:
         print('test types are: age, gender, ethnicity. You specified none of them')
-        
-    return
+        return
+
+    count = 0
+    for i in range(len(trainingSet)):
+        if int(images[i]['class']) == int(images[i][testType]):
+            count += 1
+    return count/len(trainingSet)
 
 def predetermineReps(imageData, inputReps):
     for i in range(2):
